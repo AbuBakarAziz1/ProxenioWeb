@@ -38,7 +38,7 @@ const ProfilePage = () => {
       }
     };
     fetchProfiles();
-  }, []);
+  }, [currentUser?.id]);
 
   const handleChange = (e) => setFilters((prev) => ({ ...prev, [e.target.name]: e.target.value }));
 

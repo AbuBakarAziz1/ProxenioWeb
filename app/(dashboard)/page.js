@@ -272,8 +272,8 @@ export default function UserDashboard() {
                       <select name="education" className="form-select bg-lighter py-2 border-0 placeholder-light" value={formData.education} onChange={handleChange} required>
                         <option value="" disabled hidden>Select Education Level</option>
                         <option value="High School">High School</option>
-                        <option value="Bachelor's Degree">Bachelor's Degree</option>
-                        <option value="Master's Degree">Master's Degree</option>
+                        <option value="Bachelor's Degree">Bachelor&apos;s Degree</option>
+                        <option value="Master's Degree">Master&apos;s Degree</option>
                       </select>
                     </div>
                   </div>
