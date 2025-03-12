@@ -58,7 +58,15 @@ export default function Login() {
 
 
           <div className="col-lg-4 text-center">
-            <Image src="/assets/img/LogoProxenio.png" alt="Logo" className="img-fluid" style={{ maxWidth: "100%", maxHeight: "200px" }} />
+            <Image
+              src="/assets/img/LogoProxenio.png"
+              alt="Logo"
+              className="img-fluid"
+              width={100}
+              height={100} // Add height
+              style={{ maxWidth: "100%", maxHeight: "200px" }}
+            />
+
             <h3 className="color-maroon mt-3 fs-40 fw-semibold">Proxenio</h3>
             <p className="color-maroon mt-1 fs-24">Find True Love with <br /> Proxenio.net</p>
           </div>

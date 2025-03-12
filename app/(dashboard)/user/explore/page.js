@@ -132,6 +132,8 @@ const ProfilePage = () => {
                     alt={username}
                     onError={(e) => (e.target.src = "/assets/img/bg01.png")}
                     className="img-fluid"
+                    width={100}
+                    height={100}
                     style={{
                       width: "100%",
                       height: "100%",
@@ -144,6 +146,8 @@ const ProfilePage = () => {
                     src="/assets/img/bg01.png"
                     alt="default"
                     className="img-fluid"
+                    width={100}
+                    height={100}
                     style={{
                       width: "100%",
                       height: "100%",

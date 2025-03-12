@@ -108,14 +108,14 @@ export default function UserTable() {
                   </td>
                   <td>
                     <span className="color-maroon cursor-pointer" onClick={() => router.push(`/admin/users/details/${user._id}`)}>
-                      {user.fullName}
+                      {user.fullName?.trim() || "--"}
                     </span>
                   </td>
-                  <td>{user.country}</td>
-                  <td>{user.phone}</td>
+                  <td>{user.country?.trim() || "--"}</td>
+                  <td>{user.phone?.trim() || "--"}</td>
                   <td>
                     <button className={`btn rounded-pill text-capitalize ${user.status === "active" ? "bg-green-btn" : "bg-light-btn"}`}>
-                      {user.status}
+                      {user.status?.trim()  || "--"}
                     </button>
                   </td>
                   <td className="text-center align-middle">

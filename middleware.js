@@ -12,8 +12,6 @@ export async function middleware(req) {
   const userRole = token.role; // Extract role from session
   const userStatus = token.status; // Extract user status from session
 
-  console.log(userStatus);
-
   // Restrict inactive users to only /user/page.js
   if (url.startsWith("/user") && userStatus === "inactive" && url !== "/user") {
     console.log("Unauthorized! Inactive user trying to access a restricted page");

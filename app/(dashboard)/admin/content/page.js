@@ -54,7 +54,7 @@ export default function Content() {
     formData.append("userId", userId);
 
     try {
-      const response = await fetch("/api/upload-video", {
+      const response = await fetch("/api/upload-vercel", {
         method: "POST",
         body: formData,
       });

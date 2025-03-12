@@ -71,7 +71,7 @@ export default function DashboardLayout({ children }) {
                     <SidebarLink href="/admin/content" icon="bi-file-text" label="Content" pathname={pathname} />
                     <SidebarLink href="/admin/profile" icon="bi-person" label="Profile" pathname={pathname} />
                     <SidebarLink href="/admin/setting" icon="bi-gear" label="Settings" pathname={pathname} />
-                    <SidebarLink href="/admin/roles" icon="bi-gear" label="Roles" pathname={pathname} />
+                    <SidebarLink href="/admin/roles" icon="bi-person-gear" label="Roles" pathname={pathname} />
                     <a onClick={handleLogout} className="menu-item cursor-pointer">
                         <i className="bi bi-box-arrow-right"></i> <span>Logout</span>
                     </a>
@@ -119,7 +119,7 @@ export default function DashboardLayout({ children }) {
 function Breadcrumb({ pathSegments }) {
     return (
         <nav>
-            <Link href="/admin" className="text-muted text-decoration-none">Admin</Link> {" > "}
+            <Link href="/admin" className="text-muted text-decoration-none">Admin</Link> {" >> "}
             {pathSegments.map((segment, index) => {
                 const href = `/admin/${pathSegments.slice(0, index + 1).join("/")}`;
                 return (

@@ -1,8 +1,11 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongodb";
 import User from "@/models/User";
+import fs from "fs";
+import path from "path";
+import { promisify } from "util";
 
-import { put } from "@vercel/blob";
+const writeFileAsync = promisify(fs.writeFile);
 
 export async function PUT(req) {
   try {
@@ -34,40 +37,31 @@ export async function PUT(req) {
     let profilePictureUrl = null;
     let videoFileUrl = null;
 
-    // Get the Vercel Blob token from environment variables
-    const BLOB_TOKEN = process.env.thisisproxenioblobthisisproxenioblob_READ_WRITE_TOKEN;
-
-    if (!BLOB_TOKEN) {
-      return NextResponse.json({ error: "Vercel Blob token is missing" }, { status: 500 });
-    }
-
-    // Upload Profile Photo to Vercel Blob
+    // Handle Profile Picture Upload
     const profilePhoto = formData.get("profilePhoto");
     if (profilePhoto && profilePhoto.name) {
-      const profileExt = profilePhoto.name.split(".").pop();
-      const profileFilename = `profile/${userId}-profile-${Date.now()}.${profileExt}`;
-
-      const profileBlob = await put(profileFilename, profilePhoto, {
-        access: "public",
-        token: BLOB_TOKEN, // Explicitly pass the token
-      });
-
-      profilePictureUrl = profileBlob.url; // Store the Blob URL
+      const profileExt = path.extname(profilePhoto.name);
+      const profileFilename = `${userId}-profile-${Date.now()}${profileExt}`;
+      const profileFilePath = path.join(process.cwd(), "public/uploads/profile", profileFilename);
+      
+      const profileBuffer = Buffer.from(await profilePhoto.arrayBuffer());
+      await writeFileAsync(profileFilePath, profileBuffer);
+      
+      profilePictureUrl = `/uploads/profile/${profileFilename}`;
     }
 
-     // Upload Video File to Vercel Blob
-     const videoFile = formData.get("videoFile");
-     if (videoFile && videoFile.name) {
-       const videoExt = videoFile.name.split(".").pop();
-       const videoFilename = `videos/${userId}-video-${Date.now()}.${videoExt}`;
- 
-       const videoBlob = await put(videoFilename, videoFile, {
-         access: "public",
-         token: BLOB_TOKEN,
-       });
- 
-       videoFileUrl = videoBlob.url;
-     }
+    // Handle Video Upload
+    const videoFile = formData.get("videoFile");
+    if (videoFile && videoFile.name) {
+      const videoExt = path.extname(videoFile.name);
+      const videoFilename = `${userId}-video-${Date.now()}${videoExt}`;
+      const videoFilePath = path.join(process.cwd(), "public/uploads/content", videoFilename);
+      
+      const videoBuffer = Buffer.from(await videoFile.arrayBuffer());
+      await writeFileAsync(videoFilePath, videoBuffer);
+      
+      videoFileUrl = `/uploads/content/${videoFilename}`;
+    }
 
     // Update User in Database
     const updatedUser = await User.findByIdAndUpdate(

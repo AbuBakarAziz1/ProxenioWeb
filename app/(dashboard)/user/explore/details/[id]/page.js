@@ -51,6 +51,8 @@ const ProfileDetail = () => {
                                 <Image
                                     src={profile.profilePicture || "/assets/img/default-avatar.png"}
                                     alt={profile.username}
+                                    width={100}
+                                    height={100}
                                     onError={(e) => (e.target.src = "/assets/img/bg01.png")}
                                     className="img-fluid w-100 h-100"
                                     style={{ objectFit: "contain" }}

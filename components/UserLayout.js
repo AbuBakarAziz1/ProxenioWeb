@@ -11,6 +11,7 @@ export default function UserLayout({ children }) {
     const router = useRouter();
     const pathname = usePathname();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const [greeting, setGreeting] = useState("");
 
     useEffect(() => {
         if (status === "unauthenticated") {
@@ -34,6 +35,11 @@ export default function UserLayout({ children }) {
 
     const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
     const handleLogout = async () => signOut({ callbackUrl: "/login" });
+
+    useEffect(() => {
+        const hour = new Date().getHours();
+        setGreeting(hour < 12 ? "Good Morning" : hour < 18 ? "Good Afternoon" : "Good Evening");
+    }, []);
 
     if (status === "loading") {
         return <div>Loading...</div>; // Render after all hooks have run
@@ -64,7 +70,7 @@ export default function UserLayout({ children }) {
                     <SidebarLink href="/user/settings" icon="bi-gear" label="Settings" pathname={pathname} setIsSidebarOpen={setIsSidebarOpen} />
                     
                     {/* Logout Button */}
-                    <a onClick={handleLogout} className="menu-item">
+                    <a onClick={handleLogout} className="menu-item cursor-pointer ">
                         <i className="bi bi-box-arrow-right"></i>
                         <span>Logout</span>
                     </a>
@@ -77,7 +83,7 @@ export default function UserLayout({ children }) {
                     <div className="row align-items-center mb-4 mt-1">
                         <div className="col-md-6">
                             <div className="d-flex align-items-center fs-4 px-0">
-                                <span>Good Morning, <strong>{user?.fullName || "Guest"}</strong></span>
+                                <span>{greeting}, <strong>{user?.fullName || "Guest"}</strong></span>
                             </div>
                         </div>
                         <div className="col-md-6 d-none d-md-flex justify-content-end align-items-center">

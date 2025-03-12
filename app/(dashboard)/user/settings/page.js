@@ -39,7 +39,7 @@ export default function Settings() {
             const data = await response.json();
 
             if (!response.ok) throw new Error(data.error || "Password change failed.");
-            
+
             showSuccess("Password updated successfully!");
             setFormData({ oldPassword: "", newPassword: "", confirmPassword: "" });
         } catch (err) {
@@ -50,8 +50,23 @@ export default function Settings() {
     };
 
     return (
-        <div className="container px-1">
-            <h5 className="mb-2">Change Password</h5>
+        <div className=" px-1">
+
+            <h5 className="mb-2">Contact Admin</h5>
+            <div className="card shadow-sm border-0 bg-fff p-3 rounded-4 mb-3">
+                <div className="card-body px-0 d-flex align-items-center">
+                    <i className="bi bi-envelope-fill text-danger fs-4 me-3"></i>
+                    <div>
+                        <h6 className="mb-1">Need Help?</h6>
+                        <p className="mb-0 text-muted">Reach out to the admin for support or inquiries.</p>
+                    </div>
+                    <a href="mailto:admin@example.com" className="btn btn-danger ms-auto">
+                        Contact Admin
+                    </a>
+                </div>
+            </div>
+
+            <h5 className="mt-2 pt-2">Change Password</h5>
             <div className="card shadow-sm border-0 bg-fff p-3 rounded-4">
                 <div className="card-body px-0">
                     <form onSubmit={handleSubmit}>
