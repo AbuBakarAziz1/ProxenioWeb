@@ -35,7 +35,7 @@ export async function PUT(req) {
     let videoFileUrl = null;
 
     // Get the Vercel Blob token from environment variables
-    const BLOB_TOKEN = process.env.thisisproxenioblobthisisproxenioblob_READ_WRITE_TOKEN;
+    const BLOB_TOKEN = process.env.Prox_READ_WRITE_TOKEN;
 
     if (!BLOB_TOKEN) {
       return NextResponse.json({ error: "Vercel Blob token is missing" }, { status: 500 });

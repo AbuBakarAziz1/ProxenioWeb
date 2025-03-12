@@ -20,11 +20,10 @@ export async function POST(request) {
     // Upload to Vercel Blob
     const blob = await put(`videos/${filename}`, file, {
         access: "public",
-        token: process.env.thisisproxenioblobthisisproxenioblob_READ_WRITE_TOKEN, // Pass the token explicitly
+        token: process.env.Prox_READ_WRITE_TOKEN, // Pass the token explicitly
       });
 
-    console.log(blob.url);
-
+    
     // Update MongoDB with the Blob URL
     const updatedUser = await User.findOneAndUpdate(
       { _id: userId },
