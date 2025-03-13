@@ -1,5 +1,4 @@
 "use client";
-
 import { useState, useEffect, useCallback } from "react";
 import { useDropzone } from "react-dropzone";
 import { getSession } from "next-auth/react";
@@ -47,7 +46,7 @@ export default function Content() {
 
   const handleUpload = async () => {
     if (!file || !userId) return;
-    
+
     setUploading(true);
     const formData = new FormData();
     formData.append("file", file);
@@ -58,9 +57,9 @@ export default function Content() {
         method: "POST",
         body: formData,
       });
-      
+
       if (!response.ok) throw new Error("Upload failed");
-      
+
       const data = await response.json();
       setUploadedVideoUrl(data.videoUrl);
       showSuccess("Upload successful!");

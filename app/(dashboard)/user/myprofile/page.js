@@ -1,24 +1,43 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { Button, Form, Modal } from "react-bootstrap";
+import { showSuccess, showError } from "@/components/ToastAlert";
+import { useDropzone } from "react-dropzone";
 
 export default function MyProfile() {
-    const { data: session, update } = useSession();
+    const { data: session } = useSession();
     const [profile, setProfile] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
+    const [isEditing, setIsEditing] = useState(false);
+    const [file, setFile] = useState(null);
+    const [previewUrl, setPreviewUrl] = useState(null);
+    const [uploading, setUploading] = useState(false);
+    const [uploadedVideoUrl, setUploadedVideoUrl] = useState("");
+
     // Modal state
     const [showModal, setShowModal] = useState(false);
-    const [editProfile, setEditProfile] = useState({});
-
+    const [editProfile, setEditProfile] = useState({
+        fullName: "",
+        gender: "",
+        age: "",
+        phone: "",
+        country: "",
+        religion: "",
+        education: "",
+        travelInterest: [],  // Ensure array type
+        hobbiesInterest: [], // Ensure array type
+        aboutMe: "",
+    });
 
     useEffect(() => {
         if (!session?.user) {
             setLoading(false);
             return;
         }
+
         async function fetchProfile() {
             try {
                 const response = await fetch(`/api/getUserProfile?email=${session.user.email}`);
@@ -26,6 +45,7 @@ export default function MyProfile() {
                 const data = await response.json();
                 setProfile(data.user);
                 setEditProfile(data.user);
+                setUploadedVideoUrl(data.user.videoIntroduction || ""); // Initialize uploadedVideoUrl
             } catch (err) {
                 setError(err.message);
             } finally {
@@ -36,26 +56,76 @@ export default function MyProfile() {
         fetchProfile();
     }, [session]);
 
-    const handleInputChange = (e) => {
-        const { name, value } = e.target;
-        setEditProfile((prev) => ({ ...prev, [name]: value }));
-    };
-
     const handleUpdate = async () => {
         try {
-            const response = await fetch(`/api/updateUserProfile`, {
+            const response = await fetch(`/api/update-user-profile`, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(editProfile),
             });
-
             if (!response.ok) throw new Error("Failed to update profile");
 
             const data = await response.json();
             setProfile(data.user);
+            showSuccess("Successfully Updated");
             setShowModal(false); // Close modal after success
         } catch (err) {
+            showError("Error While Update");
             setError(err.message);
+        }
+    };
+
+    const handleInputChange = (e) => {
+        const { name, value } = e.target;
+
+        setEditProfile((prev) => ({
+            ...prev,
+            [name]: name === "travelInterest" || name === "hobbiesInterest"
+                ? value.split(",").map((item) => item.trim())  // Convert string to array
+                : value
+        }));
+    };
+
+    const onDrop = useCallback((acceptedFiles) => {
+        if (acceptedFiles.length) {
+            const selectedFile = acceptedFiles[0];
+            setFile(selectedFile);
+            setPreviewUrl(URL.createObjectURL(selectedFile));
+        }
+    }, []);
+
+    const { getRootProps, getInputProps } = useDropzone({
+        onDrop,
+        accept: "video/*",
+    });
+
+    const handleVideoUpload = async () => {
+        if (!file || !profile._id) return;
+
+        setUploading(true);
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("userId", profile._id);
+
+        try {
+            const response = await fetch("/api/upload-vercel", {
+                method: "POST",
+                body: formData,
+            });
+
+            if (!response.ok) throw new Error("Upload failed");
+
+            const data = await response.json();
+            setUploadedVideoUrl(data.videoUrl); // Update uploadedVideoUrl
+            setProfile((prev) => ({ ...prev, videoIntroduction: data.videoUrl })); // Update profile state
+            setIsEditing(false);
+            showSuccess("Upload successful!");
+            setFile(null);
+            setPreviewUrl(null);
+        } catch (error) {
+            showError(error.message);
+        } finally {
+            setUploading(false);
         }
     };
 
@@ -113,7 +183,6 @@ export default function MyProfile() {
                 <div className="card border-0 py-3 bg-lightgray rounded-3 mb-2 px-2">
                     <div className="d-flex justify-content-between align-items-center mb-2 px-2">
                         <h5>Profile Details</h5>
-                        
                     </div>
 
                     <div className="table-responsive px-2 rounded-4">
@@ -178,11 +247,21 @@ export default function MyProfile() {
                                     </Form.Group>
                                     <Form.Group className="mb-3">
                                         <Form.Label>Travel Interests</Form.Label>
-                                        <Form.Control type="text" name="travelInterest" value={editProfile.travelInterest?.join(", ") || ""} onChange={handleInputChange} />
+                                        <Form.Control
+                                            type="text"
+                                            name="travelInterest"
+                                            value={Array.isArray(editProfile.travelInterest) ? editProfile.travelInterest.join(", ") : ""}
+                                            onChange={handleInputChange}
+                                        />
                                     </Form.Group>
                                     <Form.Group className="mb-3">
                                         <Form.Label>Hobbies & Interests</Form.Label>
-                                        <Form.Control type="text" name="hobbiesInterest" value={editProfile.hobbiesInterest?.join(", ") || ""} onChange={handleInputChange} />
+                                        <Form.Control
+                                            type="text"
+                                            name="hobbiesInterest"
+                                            value={Array.isArray(editProfile.hobbiesInterest) ? editProfile.hobbiesInterest.join(", ") : ""}
+                                            onChange={handleInputChange}
+                                        />
                                     </Form.Group>
                                 </div>
 
@@ -197,30 +276,62 @@ export default function MyProfile() {
                         </Form>
                     </Modal.Body>
                     <Modal.Footer className="border-0">
-                    
                         <Button variant="danger" onClick={handleUpdate}>
                             Save Changes
                         </Button>
                     </Modal.Footer>
                 </Modal>
 
-
-
                 {/* Video Introduction Card */}
                 <div className="card border-0 py-3 bg-lightgray rounded-3 px-2">
                     <div className="d-flex justify-content-between align-items-center mb-2 px-2">
                         <h5>Video Introduction</h5>
-                        <a className="color-maroon fw-semibold" href="#">Edit</a>
+                        <a className="color-maroon fw-semibold" href="#" onClick={() => setIsEditing(true)}>
+                            Edit
+                        </a>
                     </div>
 
-                    <div className="px-2 rounded-4">
-                        {profile.videoIntroduction && (
-                            <video width="100%" height="240" className="rounded-4" controls>
-                                <source src={profile.videoIntroduction} type="video/mp4" />
-                                Your browser does not support the video tag.
-                            </video>
-                        )}
-                    </div>
+                    {/* If Editing, Show Upload Area */}
+                    {isEditing ? (
+                        <div
+                            {...getRootProps()}
+                            className="dropzone card d-flex justify-content-center align-items-center bg-lightgray"
+                            style={{ height: "240px", border: "2px dashed lightgray", cursor: "pointer" }}
+                        >
+                            <input {...getInputProps()} />
+                            {previewUrl ? (
+                                <video width="100%" height="240" className="rounded-4" controls>
+                                    <source src={previewUrl} type="video/mp4" />
+                                    Your browser does not support the video tag.
+                                </video>
+                            ) : (
+                                <p>Drag & drop a video here, or click to select one</p>
+                            )}
+                        </div>
+                    ) : (
+                        // Show Video if Available, Otherwise Show "No Video Uploaded"
+                        <div className="px-2 rounded-4">
+                            {uploadedVideoUrl ? (
+                                <video width="100%" height="240" className="rounded-4" controls>
+                                    <source src={uploadedVideoUrl} type="video/mp4" />
+                                    Your browser does not support the video tag.
+                                </video>
+                            ) : (
+                                <div className="text-center py-3">
+                                    <p>No video found</p>
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {/* Upload Button */}
+                    {isEditing && (
+                        <div className="text-center mt-3">
+                            <button className="btn btn-danger align-end" onClick={handleVideoUpload} disabled={uploading}>
+                                {uploading ? "Uploading..." : "Upload Video"}
+                            </button>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>

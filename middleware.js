@@ -13,7 +13,7 @@ export async function middleware(req) {
   const userStatus = token.status; // Extract user status from session
 
   // Restrict inactive users to only /user/page.js
-  if (url.startsWith("/user") && userStatus === "inactive" && url !== "/user") {
+  if (url.startsWith("/user") && userStatus === "inactive" && url !== "/user" && url !== "/user/verification") {
     console.log("Unauthorized! Inactive user trying to access a restricted page");
     return NextResponse.redirect(new URL("/user", req.url));
   }

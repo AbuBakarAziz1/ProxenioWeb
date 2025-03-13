@@ -15,6 +15,7 @@ export default function UserDashboard() {
     const [error, setError] = useState("");
     const [userDetails, setUserDetails] = useState(null);
     const [step, setStep] = useState(1);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const nextStep = () => setStep((prev) => Math.min(prev + 1, 4));
     const prevStep = () => {
@@ -27,22 +28,37 @@ export default function UserDashboard() {
     useEffect(() => {
         const fetchUserDetails = async () => {
             if (!session?.user?.email) return;
-
+    
             try {
                 const response = await fetch(`/api/getUserProfile?email=${session.user.email}`);
                 if (!response.ok) throw new Error("Failed to fetch user details");
-
+    
                 const data = await response.json();
                 setUserDetails(data.user);
             } catch (err) {
                 setError(err.message);
-            } finally {
-                //setLoading(false);
             }
         };
-
+    
         fetchUserDetails();
     }, [session]);
+
+    useEffect(() => {
+        if (
+            userDetails &&
+            userDetails.videoIntroduction?.trim() &&
+            userDetails.aboutMe?.trim() &&
+            userDetails.fullName?.trim() &&
+            userDetails.country?.trim()
+        ) {
+            if (userDetails.status === "active") {
+                router.push("/user/explore");
+            } else {
+                router.push("/user/verification");
+            }
+        }
+    }, [userDetails]);
+    
 
     const [formData, setFormData] = useState({
         fullName: "",
@@ -98,8 +114,10 @@ export default function UserDashboard() {
         e.preventDefault();
         const requiredFields = [
             "fullName", "age", "phone", "gender", "profilePhoto",
-            "country", "education", "aboutMe"
+            "country", "education", "aboutMe", "videoFile"
         ];
+        setIsSubmitting(true);
+
         const emptyFields = requiredFields.filter(field => !formData[field]);
 
         if (emptyFields.length > 0) {
@@ -163,6 +181,9 @@ export default function UserDashboard() {
                     videoPreviewUrl: ""
                 });
 
+                setIsSubmitting(false);
+                router.push("/user/verification");
+
             } else {
                 showError(data.error || "Error updating profile");
             }
@@ -172,45 +193,13 @@ export default function UserDashboard() {
         }
     };
 
-    useEffect(() => {
-        if (!userDetails) return;
-
-        const detailsFilled =
-            userDetails.videoIntroduction &&
-            userDetails.aboutMe &&
-            userDetails.fullName &&
-            userDetails.country;
-
-        if (detailsFilled) {
-            if (userDetails.status === "active") {
-                router.push("/user/explore"); // Redirect to next page
-            }
-        }
-    }, [userDetails, router]);
-
-
     if (status === "loading") {
         return <div>Loading...</div>; // Render after all hooks have run
     }
 
-    const showVerificationMessage =
-        !userDetails?.videoIntroduction ||
-        !userDetails?.aboutMe ||
-        !userDetails?.fullName ||
-        !userDetails?.country;
-
     return (
         <div className="container px-2 mt-3">
-            {!showVerificationMessage ? (
-                <div className="d-flex justify-content-center align-items-center mt-5">
-                    <div className=" border-0 p-4 text-center">
-                        <MdError className="color-maroon fs-25 my-3" fontSize={96} />
-                        <h3 className="mb-3">Your account is not verified yet.</h3>
-                        <p>Your account is under review, please wait. We will notify you once it’s approved by the admin.
-                            <br /> Thanks for your patience.</p>
-                    </div>
-                </div>
-            ) : (
+            
                 <div className="card shadow-sm border-0 p-3">
 
                     <div className="d-flex flex-row justify-content-between align-items-center flex-wrap gap-2 mb-3 py-3 px-1 rounded-3 bg-lighter">
@@ -505,11 +494,18 @@ export default function UserDashboard() {
                         {step < 4 ? (
                             <button type="button" className="btn btn-danger px-5" onClick={nextStep}>Next</button>
                         ) : (
-                            <button type="submit" className="btn btn-danger px-5" onClick={handleSubmit}>Review & Submit</button>
+                            <button
+                                type="submit"
+                                className="btn btn-danger px-5"
+                                onClick={handleSubmit}
+                                disabled={isSubmitting}
+                            >
+                                {isSubmitting ? "Submitting..." : "Review & Submit"}
+                            </button>
                         )}
                     </div>
                 </div>
-            )}
+            
         </div>
     );
 }
