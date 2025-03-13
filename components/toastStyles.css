@@ -1,20 +1,16 @@
 /* toastStyles.css */
-.Toastify__toast-container {
-  width: auto !important; /* Allow the container to adjust its width based on content */
-  max-width: 320px; /* Set a maximum width for the toast container */
-}
-
-.Toastify__toast {
-  min-height: 40px !important; /* Adjust the height of the toast */
-  font-size: 14px !important; /* Adjust the font size */
-  padding: 8px 12px !important; /* Adjust padding */
-  border-radius: 4px !important; /* Adjust border radius */
-  width: auto !important; /* Ensure the toast width is not full-width */
-  margin: 8px; /* Add some margin around the toast */
-}
 
 /* Adjust text size for mobile devices */
 @media (max-width: 480px) {
+  
+  .Toastify__toast {
+    min-height: 50px !important; /* Adjust the height of the toast */
+    font-size: 14px !important; /* Adjust the font size */
+    padding: 8px 12px !important; /* Adjust padding */
+    border-radius: 4px !important; /* Adjust border radius */
+    width: auto !important; /* Ensure the toast width is not full-width */
+    margin: 8px; /* Add some margin around the toast */
+  }
   .Toastify__toast {
     font-size: 12px !important; /* Smaller text size for mobile */
   }
