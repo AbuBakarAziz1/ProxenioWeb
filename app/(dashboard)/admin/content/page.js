@@ -45,22 +45,39 @@ export default function Content() {
   });
 
   const handleUpload = async () => {
-    if (!file || !userId) return;
-
+    if (!file) {
+      showError("Please select a file to upload.");
+      return;
+    }
+  
+    if (!userId) {
+      showError("User ID is required.");
+      return;
+    }
+  
+    const maxSize = 50 * 1024 * 1024; // 50MB
+    if (file.size > maxSize) {
+      showError("File size exceeds 50MB limit.");
+      return;
+    }
+  
     setUploading(true);
     const formData = new FormData();
     formData.append("file", file);
     formData.append("userId", userId);
-
+  
     try {
       const response = await fetch("/api/upload-vercel", {
         method: "POST",
         body: formData,
       });
-
-      if (!response.ok) throw new Error("Upload failed");
-
+  
       const data = await response.json();
+  
+      if (!response.ok) {
+        throw new Error(data.error || "Upload failed");
+      }
+  
       setUploadedVideoUrl(data.videoUrl);
       showSuccess("Upload successful!");
       setFile(null);
@@ -71,6 +88,7 @@ export default function Content() {
       setUploading(false);
     }
   };
+  
 
   return (
     <div className="row">

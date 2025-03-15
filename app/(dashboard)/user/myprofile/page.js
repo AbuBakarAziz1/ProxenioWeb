@@ -105,7 +105,13 @@ export default function MyProfile() {
         setUploading(true);
         const formData = new FormData();
         formData.append("file", file);
-        formData.append("userId", profile._id);
+        formData.append("userId", userId);
+
+        const maxSize = 50 * 1024 * 1024; // 50MB
+        if (file.size > maxSize) {
+            showError("File size exceeds 50MB limit.");
+            return;
+        }
 
         try {
             const response = await fetch("/api/upload-vercel", {
@@ -113,12 +119,13 @@ export default function MyProfile() {
                 body: formData,
             });
 
-            if (!response.ok) throw new Error("Upload failed");
-
             const data = await response.json();
-            setUploadedVideoUrl(data.videoUrl); // Update uploadedVideoUrl
-            setProfile((prev) => ({ ...prev, videoIntroduction: data.videoUrl })); // Update profile state
-            setIsEditing(false);
+
+            if (!response.ok) {
+                throw new Error(data.error || "Upload failed");
+            }
+
+            setUploadedVideoUrl(data.videoUrl);
             showSuccess("Upload successful!");
             setFile(null);
             setPreviewUrl(null);
@@ -128,6 +135,7 @@ export default function MyProfile() {
             setUploading(false);
         }
     };
+
 
     if (loading) return <p>Loading...</p>;
     if (error) return <p>Error: {error}</p>;
