@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useDropzone } from "react-dropzone";
 import { getSession } from "next-auth/react";
 import { showSuccess, showError } from "@/components/ToastAlert";
+import { put } from "@vercel/blob";
 
 export default function Content() {
   const [file, setFile] = useState(null);
@@ -44,41 +45,51 @@ export default function Content() {
     accept: "video/*",
   });
 
+
   const handleUpload = async () => {
     if (!file) {
       showError("Please select a file to upload.");
       return;
     }
-  
+
     if (!userId) {
       showError("User ID is required.");
       return;
     }
-  
+
     const maxSize = 50 * 1024 * 1024; // 50MB
     if (file.size > maxSize) {
       showError("File size exceeds 50MB limit.");
       return;
     }
-  
+
     setUploading(true);
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("userId", userId);
-  
+
     try {
-      const response = await fetch("/api/upload-vercel", {
-        method: "POST",
-        body: formData,
+      const extension = file.name.split(".").pop();
+      const filename = `${userId}-${Date.now()}.${extension}`;
+
+      // Upload directly to Vercel Blob
+      const blob = await put(`videos/${filename}`, file, {
+        access: "public",
+        token: process.env.NEXT_PUBLIC_BLOB_WRITE_TOKEN, // Use frontend-safe token
       });
-  
-      const data = await response.json();
-  
+
+      if (!blob.url) throw new Error("File upload failed.");
+
+      // Send the Blob URL to your backend to update MongoDB
+      const response = await fetch("/api/save-video-url", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId, videoUrl: blob.url }),
+      });
+
       if (!response.ok) {
-        throw new Error(data.error || "Upload failed");
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to save video URL.");
       }
-  
-      setUploadedVideoUrl(data.videoUrl);
+
+      setUploadedVideoUrl(blob.url);
       showSuccess("Upload successful!");
       setFile(null);
       setPreviewUrl(null);
@@ -88,7 +99,8 @@ export default function Content() {
       setUploading(false);
     }
   };
-  
+
+
 
   return (
     <div className="row">

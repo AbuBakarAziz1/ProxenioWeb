@@ -4,6 +4,7 @@ import { useSession } from "next-auth/react";
 import { Button, Form, Modal } from "react-bootstrap";
 import { showSuccess, showError } from "@/components/ToastAlert";
 import { useDropzone } from "react-dropzone";
+import { put } from "@vercel/blob";
 
 export default function MyProfile() {
     const { data: session } = useSession();
@@ -102,21 +103,33 @@ export default function MyProfile() {
     const handleVideoUpload = async () => {
         if (!file || !profile._id) return;
 
-        setUploading(true);
-        const formData = new FormData();
-        formData.append("file", file);
-        formData.append("userId", profile._id);
+        const userId = profile._id;
 
-        const maxSize = 50 * 1024 * 1024; // 50MB
+        const maxSize = 20 * 1024 * 1024; // 50MB
         if (file.size > maxSize) {
             showError("File size exceeds 50MB limit.");
             return;
         }
 
+        setUploading(true);
+
         try {
+            const extension = file.name.split(".").pop();
+            const filename = `${userId}-${Date.now()}.${extension}`;
+
+            // Upload directly to Vercel Blob
+            const blob = await put(`videos/${filename}`, file, {
+                access: "public",
+                token: process.env.NEXT_PUBLIC_BLOB_WRITE_TOKEN, // Use frontend-safe token
+            });
+
+            if (!blob.url) throw new Error("File upload failed.");
+
+            // Send the Blob URL to your backend to update MongoDB
             const response = await fetch("/api/upload-vercel", {
                 method: "POST",
-                body: formData,
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ userId, videoUrl: blob.url }),
             });
 
             const data = await response.json();
