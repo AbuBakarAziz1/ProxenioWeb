@@ -113,8 +113,6 @@ export default function MyProfile() {
 
         setUploading(true);
 
-        console.log("Blob Token:", process.env.NEXT_PUBLIC_PROX_READ_WRITE_TOKEN);
-
         try {
             const extension = file.name.split(".").pop();
             const filename = `${userId}-${Date.now()}.${extension}`;
