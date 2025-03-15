@@ -72,7 +72,7 @@ export default function Content() {
       // Upload directly to Vercel Blob
       const blob = await put(`videos/${filename}`, file, {
         access: "public",
-        token: process.env.Prox_READ_WRITE_TOKEN, // Use frontend-safe token
+        token: process.env.NEXT_PUBLIC_PROX_READ_WRITE_TOKEN, // Use frontend-safe token
       });
 
       if (!blob.url) throw new Error("File upload failed.");

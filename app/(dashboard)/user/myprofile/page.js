@@ -113,6 +113,8 @@ export default function MyProfile() {
 
         setUploading(true);
 
+        console.log("Blob Token:", process.env.NEXT_PUBLIC_PROX_READ_WRITE_TOKEN);
+
         try {
             const extension = file.name.split(".").pop();
             const filename = `${userId}-${Date.now()}.${extension}`;
@@ -120,9 +122,9 @@ export default function MyProfile() {
             // Upload directly to Vercel Blob
             const blob = await put(`videos/${filename}`, file, {
                 access: "public",
-                token: process.env.Prox_READ_WRITE_TOKEN,
+                token: process.env.NEXT_PUBLIC_PROX_READ_WRITE_TOKEN,
             });
-            console.log("Blob Token:", process.env.Prox_READ_WRITE_TOKEN);
+        
 
 
             if (!blob.url) throw new Error("File upload failed.");
