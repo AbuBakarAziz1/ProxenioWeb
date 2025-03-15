@@ -78,7 +78,7 @@ export default function Content() {
       if (!blob.url) throw new Error("File upload failed.");
 
       // Send the Blob URL to your backend to update MongoDB
-      const response = await fetch("/api/save-video-url", {
+      const response = await fetch("/api/upload-vercel", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userId, videoUrl: blob.url }),
