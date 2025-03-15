@@ -105,7 +105,7 @@ export default function MyProfile() {
         setUploading(true);
         const formData = new FormData();
         formData.append("file", file);
-        formData.append("userId", userId);
+        formData.append("userId", profile._id);
 
         const maxSize = 50 * 1024 * 1024; // 50MB
         if (file.size > maxSize) {
