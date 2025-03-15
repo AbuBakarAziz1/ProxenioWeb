@@ -120,12 +120,13 @@ export default function MyProfile() {
             // Upload directly to Vercel Blob
             const blob = await put(`videos/${filename}`, file, {
                 access: "public",
-                token: process.env.Prox_READ_WRITE_TOKEN, // Use frontend-safe token
+                token: process.env.Prox_READ_WRITE_TOKEN,
             });
+            console.log("Blob Token:", process.env.Prox_READ_WRITE_TOKEN);
+
 
             if (!blob.url) throw new Error("File upload failed.");
 
-            // Send the Blob URL to your backend to update MongoDB
             const response = await fetch("/api/upload-vercel", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
