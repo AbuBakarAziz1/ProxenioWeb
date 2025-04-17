@@ -67,7 +67,7 @@ const TabSection = ({ userId }) => {
                                                         className="object-fit img-fluid"
                                                         width={100}
                                                         height={100}
-                                                        alt={fullName}
+                                                        alt={fullName || "User profile"}
                                                         style={{ width: "100%", height: "300px", objectFit: "cover" }} />
 
                                                     {/* Overlay effect */}

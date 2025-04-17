@@ -6,12 +6,14 @@ import Image from "next/image";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import { useSession, signOut } from "next-auth/react";
 
+
 export default function DashboardLayout({ children }) {
     const { data: session, status } = useSession();
     const router = useRouter();
     const pathname = usePathname();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [greeting, setGreeting] = useState("");
+    const [isLanguageOpen, setIsLanguageOpen] = useState(false);
 
     const user = session?.user || {};
 
@@ -105,7 +107,39 @@ export default function DashboardLayout({ children }) {
                                 <h5 className="mb-0 text-muted">{user?.username || "Guest"}</h5>
                                 <p className="mb-0 text-muted">{user?.email || "No Email"}</p>
                             </div>
-                            <LanguageDropdown />
+
+                            <div className="position-relative">
+                                <button 
+                                    className="btn p-0 bg-transparent border-0"
+                                    onClick={() => setIsLanguageOpen(!isLanguageOpen)}
+                                >
+                                    <i className="bi bi-globe-americas fs-3 text-muted"></i>
+                                </button>
+                                
+                                {isLanguageOpen && (
+                                    <div className="position-absolute end-0 mt-2 bg-white shadow rounded py-2 z-3">
+                                        <button 
+                                            className="dropdown-item d-block px-4 py-2 text-start"
+                                            onClick={() => {
+                                                // Handle English selection
+                                                setIsLanguageOpen(false);
+                                            }}
+                                        >
+                                            English
+                                        </button>
+                                        <button 
+                                            className="dropdown-item d-block px-4 py-2 text-start"
+                                            onClick={() => {
+                                                // Handle Greek selection
+                                                setIsLanguageOpen(false);
+                                            }}
+                                        >
+                                            Greek
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+
                         </div>
                     </div>
                     {children}
@@ -144,19 +178,3 @@ function SidebarLink({ href, icon, label, pathname }) {
     );
 }
 
-// Language Dropdown Component
-function LanguageDropdown() {
-    return (
-        <ul className="navbar-nav bg-light ms-5">
-            <li className="nav-item dropdown">
-                <a className="nav-link bg-white" id="navbarDropdown" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                    <i className="bi bi-globe-americas fs-3"></i>
-                </a>
-                <ul className="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
-                    <li><a className="dropdown-item" href="#!">English</a></li>
-                    <li><a className="dropdown-item" href="#!">Greek</a></li>
-                </ul>
-            </li>
-        </ul>
-    );
-}

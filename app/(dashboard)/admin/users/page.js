@@ -6,7 +6,6 @@ import { BsPencil, BsFillTrash3Fill } from "react-icons/bs";
 import { Modal, Button, Form } from "react-bootstrap";
 import { showSuccess, showError } from "@/components/ToastAlert";
 
-
 export default function UserTable() {
   const [userList, setUserList] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -14,24 +13,27 @@ export default function UserTable() {
   const [modalType, setModalType] = useState(null);
   const [selectedUser, setSelectedUser] = useState(null);
   const [status, setStatus] = useState("");
+  const [selectedIds, setSelectedIds] = useState([]);
   const router = useRouter();
 
   useEffect(() => {
-    (async () => {
-      try {
-        const res = await fetch("/api/users");
-        if (!res.ok) throw new Error("Failed to fetch users");
-        const data = await res.json();
-        setUserList(data);
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    })();
+    fetchUsers();
   }, []);
 
-  const openModal = (type, user) => {
+  const fetchUsers = async () => {
+    try {
+      const res = await fetch("/api/users");
+      if (!res.ok) throw new Error("Failed to fetch users");
+      const data = await res.json();
+      setUserList(data);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const openModal = (type, user = null) => {
     setModalType(type);
     setSelectedUser(user);
     setStatus(user?.status || "");
@@ -44,45 +46,91 @@ export default function UserTable() {
 
   const handleStatusChange = async () => {
     try {
-      const response = await fetch(`/api/updateUserStatus/${selectedUser._id}`, {
+      const res = await fetch(`/api/updateUserStatus/${selectedUser._id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status })
+        body: JSON.stringify({ status }),
       });
-      
-      const data = await response.json();
+      const data = await res.json();
       showSuccess("User Status Updated");
       if (data.success) {
-        setUserList(prevUsers => prevUsers.map(user => user._id === selectedUser._id ? { ...user, status } : user));
+        setUserList(prev => prev.map(u => u._id === selectedUser._id ? { ...u, status } : u));
         closeModal();
       }
     } catch (error) {
       showError("Error while Updating");
-      console.error("Error updating status:", error);
     }
   };
 
   const handleDelete = async () => {
     try {
-      await fetch(`/api/users/${selectedUser._id}`, { method: "DELETE" });
-      setUserList(prevUsers => prevUsers.filter(user => user._id !== selectedUser._id));
+      const idsToDelete = selectedIds.length > 0 ? selectedIds : [selectedUser?._id];
+  
+      const response = await fetch("/api/users", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userIds: idsToDelete }),
+      });
+  
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Delete failed");
+  
+      showSuccess(data.message || "User(s) deleted successfully");
+  
+      setUserList(prev => prev.filter(user => !idsToDelete.includes(user._id)));
+      setSelectedIds([]);
       closeModal();
     } catch (error) {
-      console.error("Error deleting user:", error);
+      showError("Delete failed");
     }
   };
+  
+
+  const handleCheckbox = (id) => {
+    setSelectedIds(prev =>
+      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+    );
+  };
+
+  const handleSelectAll = () => {
+    if (selectedIds.length === userList.length) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(userList.map(user => user._id));
+    }
+  };
+  
+  const isAllSelected = userList.length > 0 && selectedIds.length === userList.length;
+  
 
   if (loading) return <p className="text-center">Loading...</p>;
   if (error) return <p className="text-center text-danger">{error}</p>;
 
   return (
     <div className="row">
+      <div className="col-md-12 mb-3 d-flex justify-content-between align-items-center">
+        <h5 className="mb-0">User List</h5>
+        {selectedIds.length > 0 && (
+          <button className="btn btn-danger" onClick={() => openModal("delete")}>
+            Delete Selected ({selectedIds.length})
+          </button>
+        )}
+      </div>
+
       <div className="col-md-12">
         <div className="table-responsive bg-white p-3 rounded-4">
           <table className="table tablespace text-center">
             <thead className="thead-bg">
               <tr>
-                <th></th>
+                <th>
+                <input
+        type="checkbox"
+        className="form-check-input"
+        checked={isAllSelected}
+        onChange={handleSelectAll}
+      />
+
+                </th>
                 <th>ID</th>
                 <th>Image</th>
                 <th>Name</th>
@@ -93,45 +141,75 @@ export default function UserTable() {
               </tr>
             </thead>
             <tbody className="text-grayer tbody-bg">
-              {userList.length > 0 ? userList.map((user, index) => (
-                <tr key={user._id || index}>
-                  <td><input type="checkbox" className="form-check-input" /></td>
-                  <td>{index + 1}</td>
-                  <td>
-                    <Image
-                      src={user.profilePicture?.trim() ? user.profilePicture : "/assets/img/user.png"}
-                      width={50}
-                      height={50}
-                      className="rounded-circle border border-secondary object-fit-cover"
-                      alt={user.username || "User"}
-                    />
-                  </td>
-                  <td>
-                    <span className="color-maroon cursor-pointer" onClick={() => router.push(`/admin/users/details/${user._id}`)}>
-                      {user.fullName?.trim() || "--"}
-                    </span>
-                  </td>
-                  <td>{user.country?.trim() || "--"}</td>
-                  <td>{user.phone?.trim() || "--"}</td>
-                  <td>
-                    <button className={`btn rounded-pill text-capitalize ${user.status === "active" ? "bg-green-btn" : "bg-light-btn"}`}>
-                      {user.status?.trim()  || "--"}
-                    </button>
-                  </td>
-                  <td className="text-center align-middle">
-                    <div className="d-flex justify-content-center gap-1">
-                      <button className="btn btn-sm" title="Edit" onClick={() => openModal("edit", user)}>
-                        <BsPencil />
+              {userList.length > 0 ? (
+                userList.map((user, index) => (
+                  <tr key={user._id || index}>
+                    <td>
+                      <input
+                        type="checkbox"
+                        className="form-check-input"
+                        checked={selectedIds.includes(user._id)}
+                        onChange={() => handleCheckbox(user._id)}
+                      />
+                    </td>
+                    <td>{index + 1}</td>
+                    <td>
+                      <Image
+                        src={
+                          user.profilePicture?.trim()
+                            ? user.profilePicture
+                            : "/assets/img/user.png"
+                        }
+                        width={50}
+                        height={50}
+                        className="rounded-circle border border-secondary object-fit-cover"
+                        alt={user.username || "User"}
+                      />
+                    </td>
+                    <td>
+                      <span
+                        className="color-maroon cursor-pointer"
+                        onClick={() => router.push(`/admin/users/details/${user._id}`)}
+                      >
+                        {user.fullName?.trim() || "--"}
+                      </span>
+                    </td>
+                    <td>{user.country?.trim() || "--"}</td>
+                    <td>{user.phone?.trim() || "--"}</td>
+                    <td>
+                      <button
+                        className={`btn rounded-pill text-capitalize ${
+                          user.status === "active" ? "bg-green-btn" : "bg-light-btn"
+                        }`}
+                      >
+                        {user.status?.trim() || "--"}
                       </button>
-                      <button className="btn btn-sm" title="Delete" onClick={() => openModal("delete", user)}>
-                        <BsFillTrash3Fill className="text-danger" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              )) : (
+                    </td>
+                    <td className="text-center align-middle">
+                      <div className="d-flex justify-content-center gap-1">
+                        <button
+                          className="btn btn-sm"
+                          title="Edit"
+                          onClick={() => openModal("edit", user)}
+                        >
+                          <BsPencil />
+                        </button>
+                        <button
+                          className="btn btn-sm"
+                          title="Delete"
+                          onClick={() => openModal("delete", user)}
+                        >
+                          <BsFillTrash3Fill className="text-danger" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              ) : (
                 <tr>
-                  <td colSpan="8" className="text-center">No users found.</td>
+                  <td colSpan="8" className="text-center">
+                    No users found.
+                  </td>
                 </tr>
               )}
             </tbody>
@@ -142,11 +220,25 @@ export default function UserTable() {
       {/* Modal */}
       <Modal show={modalType !== null} onHide={closeModal} centered>
         <Modal.Header closeButton className="border-0">
-          <Modal.Title>{modalType === "edit" ? "Edit User Status" : "Confirm Delete"}</Modal.Title>
+          <Modal.Title>
+            {modalType === "edit"
+              ? "Edit User Status"
+              : selectedIds.length > 1
+              ? "Delete Selected Users"
+              : "Confirm Delete"}
+          </Modal.Title>
         </Modal.Header>
         <Modal.Body>
           {modalType === "delete" ? (
-            <p>Are you sure you want to delete this user?</p>
+            <p>
+              Are you sure you want to delete{" "}
+              <strong>
+                {selectedIds.length > 1
+                  ? `${selectedIds.length} users`
+                  : "this user"}
+              </strong>
+              ?
+            </p>
           ) : (
             <Form>
               <Form.Group className="mb-3">
@@ -160,11 +252,17 @@ export default function UserTable() {
           )}
         </Modal.Body>
         <Modal.Footer className="border-0">
-          <Button variant="secondary" onClick={closeModal}>Cancel</Button>
+          <Button variant="secondary" onClick={closeModal}>
+            Cancel
+          </Button>
           {modalType === "delete" ? (
-            <Button variant="danger" onClick={handleDelete}>Delete</Button>
+            <Button variant="danger" onClick={handleDelete}>
+              Delete
+            </Button>
           ) : (
-            <Button variant="danger" onClick={handleStatusChange}>Save Changes</Button>
+            <Button variant="danger" onClick={handleStatusChange}>
+              Save Changes
+            </Button>
           )}
         </Modal.Footer>
       </Modal>

@@ -1,0 +1,14 @@
+{
+  "dashboard": "Dashboard",
+  "users": "Users",
+  "matches": "Matches",
+  "payments": "Payments",
+  "content": "Content",
+  "profile": "Profile",
+  "settings": "Settings",
+  "roles": "Roles",
+  "logout": "Logout",
+  "goodMorning": "Good Morning",
+  "goodAfternoon": "Good Afternoon",
+  "goodEvening": "Good Evening"
+}

@@ -10,7 +10,8 @@ import Image from "next/image";
 export default function ProfilePage() {
   const { data: session } = useSession();
   const [user, setUser] = useState(null);
-  const [userEmail, setUserEmail] = useState(null);
+  const [fullName, setFullName] = useState("");  // State for fullName
+  const [profilePicture, setProfilePicture] = useState(null);  // State for profilePicture
   const [password, setPassword] = useState("");
   const [showModal, setShowModal] = useState(false); // Modal State
   const router = useRouter();
@@ -20,39 +21,42 @@ export default function ProfilePage() {
   const handleUpdate = async () => {
     if (!password.trim()) return showError("Please enter a new password");
 
+    const formData = new FormData();
+    if (fullName) formData.append("fullName", fullName);
+    if (profilePicture) formData.append("profilePicture", profilePicture);
+    if (password) formData.append("password", password);
+
     try {
-      const res = await fetch("/api/auth/update-profile", {
+      const res = await fetch(`/api/auth/update-profile/${currentUser.id}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: session.user.id, password }), // Send user ID
+        body: formData,
       });
 
       const data = await res.json();
       if (res.ok) {
-        showSuccess("Password updated successfully");
+        showSuccess("Profile updated successfully");
         setPassword(""); // Clear password field
         setShowModal(false); // Close modal
       } else {
         showError(data.error);
       }
     } catch (error) {
-      console.error("Error updating password:", error);
-      showError("Password update failed");
+      console.error("Error updating profile:", error);
+      showError("Profile update failed");
     }
   };
-
 
   return (
     <div className="row">
       <div className="col-md-12">
         <div className="card shadow-sm p-3 border-0">
-
           <div className="mb-3">
             <Image
-              src="/assets/img/user.png"
-              width={110}
-              height={110}
-              className="rounded-pill border m-2 img-fluid"
+              src={currentUser?.profilePicture || "/assets/img/user.png"}
+              width={120}
+              height={120}
+              className="rounded-pill border m-2 "
+              style={{borderRadius:"50%"}}
               alt="profile"
             />
             <div className="text-start ms-3">
@@ -74,17 +78,47 @@ export default function ProfilePage() {
             <div className="table-responsive p-2 rounded-4">
               <table className="table">
                 <tbody>
-                  <tr className="bg-lightgray align-middle ">
-
+                  <tr className="bg-lightgray align-middle">
+                    <td className="bg-lightgray">Full Name</td>
+                    <td className="text-black bg-lightgray">
+                      <input
+                        type="text"
+                        className="form-control"
+                        value={fullName}
+                        onChange={(e) => setFullName(e.target.value)}
+                        placeholder="Full Name"
+                      />
+                    </td>
+                  </tr>
+                  <tr className="bg-lightgray align-middle">
                     <td className="bg-lightgray">Password</td>
-                    <td className="text-black bg-lightgray"><input type="password" className="form-control" placeholder="***********" value={password} onChange={(e) => setPassword(e.target.value)} /> </td>
-                    <td className="text-end align-middle bg-lightgray">
-                      <button type="submit" className="btn btn-md " title="View Update">
+                    <td className="text-black bg-lightgray">
+                      <input
+                        type="password"
+                        className="form-control"
+                        placeholder="***********"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                      />
+                    </td>
+                  </tr>
+                  <tr className="bg-lightgray align-middle">
+                    <td className="bg-lightgray">Profile Picture</td>
+                    <td className="text-black bg-lightgray">
+                      <input
+                        type="file"
+                        className="form-control"
+                        onChange={(e) => setProfilePicture(e.target.files[0])}
+                      />
+                    </td>
+                  </tr>
+                  <tr>
+                    <td colSpan="3" className="text-end align-middle">
+                      <button type="submit" className="btn btn-md" title="View Update">
                         <BsPencil />
                       </button>
                     </td>
                   </tr>
-
                 </tbody>
               </table>
             </div>
@@ -95,10 +129,10 @@ export default function ProfilePage() {
       {/* React-Bootstrap Modal for Confirmation */}
       <Modal show={showModal} onHide={() => setShowModal(false)} centered>
         <Modal.Header closeButton className="border-0">
-          <Modal.Title>Confirm Password Change</Modal.Title>
+          <Modal.Title>Confirm Profile Update</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <p>Are you sure you want to update your password?</p>
+          <p>Are you sure you want to update your profile?</p>
         </Modal.Body>
         <Modal.Footer className="border-0">
           <Button variant="secondary" onClick={() => setShowModal(false)}>
