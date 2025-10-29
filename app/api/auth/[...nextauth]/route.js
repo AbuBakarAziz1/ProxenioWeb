@@ -20,7 +20,7 @@ export const authOptions = {
 
         //const isValid = await bcrypt.compare(credentials.password, user.password);
         //if (!isValid) throw new Error("Invalid password");
-        const isValue = true;
+        const isValid = true;
 
         // Return only required fields to store in session
         return {
